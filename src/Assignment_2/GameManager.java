@@ -18,33 +18,41 @@ public class GameManager {
         boolean running = true;
 
         while (running) {
-            System.out.println("\n--- Game Menu ---");
-            System.out.println("1. Create a new pet");
-            System.out.println("2. Feed a pet");
-            System.out.println("3. Play with a pet");
-            System.out.println("4. Let a pet rest");
-            System.out.println("5. Play a mini-game");
-            System.out.println("6. Display status");
-            System.out.println("7. Exit game");
+            try {
+                System.out.println("\n--- Game Menu ---");
+                System.out.println("1. Create a new pet");
+                System.out.println("2. Feed a pet");
+                System.out.println("3. Play with a pet");
+                System.out.println("4. Let a pet rest");
+                System.out.println("5. Play a mini-game");
+                System.out.println("6. Display status");
+                System.out.println("7. Exit game");
 
-            System.out.print("Choose an option: ");
-            int choice = scanner.nextInt();
+                System.out.print("Choose an option: ");
+                int choice = scanner.nextInt();
 
-            switch (choice) {
-                case 1 -> createPet();
-                case 2 -> feedPet();
-                case 3 -> playWithPet();
-                case 4 -> letPetRest();
-                case 5 -> playMiniGame();
-                case 6 -> player.displayStatus();
-                case 7 -> running = false;
-                default -> System.out.println("Invalid choice. Try again.");
-            }
+                switch (choice) {
+                    case 1 -> createPet();
+                    case 2 -> feedPet();
+                    case 3 -> playWithPet();
+                    case 4 -> letPetRest();
+                    case 5 -> playMiniGame();
+                    case 6 -> player.displayStatus();
+                    case 7 -> {
+                        System.out.println("Exiting the game. Thank you for playing!");
+                        running = false;
+                    }
+                    default -> System.out.println("Invalid choice. Please enter a number between 1 and 7.");
+                }
 
-            if (choice != 5) {
-                turn++;
-                updatePets();
-                checkGameOver();
+                if (choice != 5 && choice >= 1 && choice <= 6) {
+                    turn++;
+                    updatePets();
+                    checkGameOver();
+                }
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+                scanner.nextLine(); // Clear invalid input
             }
         }
 
@@ -54,7 +62,11 @@ public class GameManager {
     private void createPet() {
         Scanner scanner = new Scanner(System.in);
         System.out.print("Enter pet name: ");
-        String name = scanner.nextLine();
+        String name = scanner.nextLine().trim();
+        if (name.isEmpty()) {
+            System.out.println("Pet name cannot be empty. Try again.");
+            return;
+        }
         Pet newPet = new Pet(name);
         player.addPet(newPet);
         System.out.println(name + " has been added as your pet!");
@@ -68,10 +80,20 @@ public class GameManager {
 
         displayPets();
         Scanner scanner = new Scanner(System.in);
-        System.out.print("Select a pet to feed (index): ");
-        int index = scanner.nextInt() - 1;
 
-        player.feedPet(index);
+        while (true) {
+            try {
+                System.out.print("Select a pet to feed (index): ");
+                int index = scanner.nextInt() - 1;
+                player.feedPet(index);
+                break;
+            } catch (IndexOutOfBoundsException e) {
+                System.out.println("Invalid selection. Please select a valid pet index.");
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+                scanner.nextLine(); // Clear invalid input
+            }
+        }
     }
 
     private void playWithPet() {
@@ -88,18 +110,30 @@ public class GameManager {
         System.out.println("2. Word Scramble Game");
 
         Scanner scanner = new Scanner(System.in);
-        int choice = scanner.nextInt();
 
-        int reward = switch (choice) {
-            case 1 -> NumberGuessingGame.play();
-            case 2 -> WordScrambleGame.play();
-            default -> {
-                System.out.println("Invalid choice.");
-                yield 0;
+        while (true) {
+            try {
+                System.out.print("Enter your choice: ");
+                int choice = scanner.nextInt();
+
+                int reward = switch (choice) {
+                    case 1 -> NumberGuessingGame.play();
+                    case 2 -> WordScrambleGame.play();
+                    default -> {
+                        System.out.println("Invalid choice. Please select 1 or 2.");
+                        yield 0;
+                    }
+                };
+
+                if (reward > 0) {
+                    player.earnFood(reward);
+                }
+                break;
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+                scanner.nextLine(); // Clear invalid input
             }
-        };
-
-        if (reward > 0) player.earnFood(reward);
+        }
     }
 
     private void displayPets() {
